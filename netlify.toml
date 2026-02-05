@@ -1,0 +1,6 @@
+
+# netlify.toml
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "frame-ancestors https://app.smartsheet.com https://*.smartsheet.com"
