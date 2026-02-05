@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Icebreaker Generator</title>
+  <style>
+    :root{
+      --bg:#0b1220;--card:#121a2a;--accent:#5eead4;--accent2:#60a5fa;--text:#e5e7eb;--muted:#94a3b8;
+      --btn:#1f2937;--btn-hover:#111827;--shadow:0 8px 28px rgba(0,0,0,.35);
+      --radius:16px
+    }
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0b1220 0%,#0f172a 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
+    .wrap{min-height:100%;display:grid;place-items:center;padding:24px}
+    .card{width:min(860px,96vw);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));backdrop-filter: blur(6px);
+      border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px 24px 18px}
+    .header{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+    .logo{width:40px;height:40px;border-radius:10px;background: linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 6px 20px rgba(96,165,250,.45)}
+    h1{font-size:22px;line-height:1.2;margin:0}
+    .subtitle{color:var(--muted);font-size:14px;margin-top:2px}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
+    @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}}
+    .pane{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
+    select,input[type="text"]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.7);color:var(--text)}
+    .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .tag{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);cursor:pointer;font-size:12px;color:var(--muted)}
+    .tag.active{background:linear-gradient(135deg,rgba(94,234,212,.15),rgba(96,165,250,.15));color:var(--text);border-color:rgba(255,255,255,.24)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer;color:#0b1220}
+    .primary{background:linear-gradient(135deg,var(--accent),var(--accent2));}
+    .secondary{background:#e5e7eb;color:#0b1220}
+    .ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.12)}
+    .question{font-size:24px;line-height:1.35;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.16);padding:18px;border-radius:12px;margin-top:10px}
+    .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:var(--muted);font-size:12px}
+    a{color:var(--accent2);text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <div class="logo"></div>
+        <div>
+          <h1 id="appTitle">Icebreaker Generator</h1>
+          <div class="subtitle">Generate inclusive, ready-to-use prompts for meetings, workshops, and stand‑ups.</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="pane">
+          <label for="category">Category</label>
+          <div class="tags" id="categoryTags"></div>
+
+          <label for="tone" style="margin-top:12px">Tone</label>
+          <select id="tone">
+            <option value="any">Any</option>
+            <option value="fun">Fun & light</option>
+            <option value="thoughtful">Thoughtful</option>
+            <option value="work">Work‑safe professional</option>
+          </select>
+
+          <label for="theme" style="margin-top:12px">Optional theme (e.g., "remote teams", "new hire week")</label>
+          <input id="theme" type="text" placeholder="Add a theme (optional)" />
+
+          <div class="actions">
+            <button class="primary" id="btnGen">Generate question</button>
+            <button class="secondary" id="btnCopy">Copy</button>
+            <button class="ghost" id="btnShare">Share link</button>
+          </div>
+        </div>
+
+        <div class="pane">
+          <label>Question</label>
+          <div id="question" class="question">Click “Generate question”.</div>
+          <div class="foot"><span id="meta">0 questions loaded</span><span>Embeddable • Private • No tracking</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // --- Data ---------------------------------------------------------------
+  const DATA = {
+    categories: [
+      {key:'starter', label:'Quick starters'},
+      {key:'team', label:'Team connection'},
+      {key:'remote', label:'Remote-friendly'},
+      {key:'reflect', label:'Reflective'},
+      {key:'fun', label:'Just for fun'},
+      {key:'newhire', label:'New hires/onboarding'}
+    ],
+    items: [
+      // tone: fun | thoughtful | work | any
+      {cat:'starter', tone:'any', q:'What’s one small win you had this week?'}
+      ,{cat:'starter', tone:'fun', q:'What’s your go‑to GIF or emoji when words fail?'}
+      ,{cat:'starter', tone:'work', q:'What’s one thing you need from the team today?'}
+      ,{cat:'team', tone:'thoughtful', q:'Who helped you recently, and what did they do?'}
+      ,{cat:'team', tone:'work', q:'What’s a collaboration norm you appreciate on this team?'}
+      ,{cat:'team', tone:'fun', q:'If our team were a TV show, what genre would it be and why?'}
+      ,{cat:'remote', tone:'any', q:'What’s your favorite tip for staying energized while working remotely?'}
+      ,{cat:'remote', tone:'fun', q:'Show us the nearest non‑work item on your desk and tell its story.'}
+      ,{cat:'reflect', tone:'thoughtful', q:'What’s a lesson you learned recently that changed how you work?'}
+      ,{cat:'reflect', tone:'work', q:'What’s something we should do less of to create more focus?'}
+      ,{cat:'fun', tone:'fun', q:'You get a billboard for a day. What do you put on it?'}
+      ,{cat:'fun', tone:'any', q:'What’s a hobby you’d love to try if time and money weren’t an issue?'}
+      ,{cat:'newhire', tone:'work', q:'What’s one thing that would make your first month feel successful?'}
+      ,{cat:'newhire', tone:'fun', q:'What’s a fun fact about you that’s work‑safe but unexpected?'}
+      ,{cat:'starter', tone:'any', q:'What’s something you’re looking forward to this week?'}
+      ,{cat:'team', tone:'any', q:'What’s a ritual our team should adopt for energy or focus?'}
+      ,{cat:'remote', tone:'work', q:'What’s your camera‑on comfort level today: on, off, or “depends”? Why?'}
+      ,{cat:'reflect', tone:'thoughtful', q:'When do you do your best thinking, and how can we support that?'}
+      ,{cat:'fun', tone:'fun', q:'If you could teleport for lunch, where would you go?'}
+      ,{cat:'newhire', tone:'work', q:'What’s a past project you’re proud of and why?'}
+    ]
+  }
+
+  // --- Utilities ---------------------------------------------------------
+  const $ = sel => document.querySelector(sel)
+  const params = new URLSearchParams(location.search)
+
+  // Branding via query params: ?title=Your%20Title&accent=%235eead4
+  const title = params.get('title')
+  if(title) $('#appTitle').textContent = title
+  const accent = params.get('accent')
+  if(accent){
+    document.documentElement.style.setProperty('--accent', accent)
+  }
+
+  // Build category tags; allow multi-select; if ?cats=starter,fun provided, preselect
+  const pre = new Set((params.get('cats')||'').split(',').filter(Boolean))
+  const tagWrap = $('#categoryTags')
+  const active = new Set()
+  DATA.categories.forEach(c=>{
+    const el = document.createElement('div')
+    el.className = 'tag' + (pre.has(c.key)?' active':'')
+    if(pre.has(c.key)) active.add(c.key)
+    el.dataset.key = c.key
+    el.textContent = c.label
+    el.addEventListener('click',()=>{
+      if(active.has(c.key)){active.delete(c.key); el.classList.remove('active')} else {active.add(c.key); el.classList.add('active')}
+    })
+    tagWrap.appendChild(el)
+  })
+
+  // Meta count
+  const setMeta = ()=>{
+    $('#meta').textContent = `${DATA.items.length} questions loaded`
+  }
+  setMeta()
+
+  // Pick function
+  function pick(){
+    const cats = active.size? Array.from(active) : DATA.categories.map(c=>c.key)
+    const tone = $('#tone').value
+    let pool = DATA.items.filter(i=>cats.includes(i.cat))
+    if(tone !== 'any') pool = pool.filter(i=>i.tone===tone || i.tone==='any')
+    if(pool.length===0){ return 'No questions match those filters. Try adding more categories or setting tone to Any.' }
+    const theme = $('#theme').value.trim()
+    const item = pool[Math.floor(Math.random()*pool.length)]
+    return theme ? `${item.q} (Theme: ${theme})` : item.q
+  }
+
+  $('#btnGen').addEventListener('click',()=>{
+    $('#question').textContent = pick()
+  })
+
+  $('#btnCopy').addEventListener('click', async()=>{
+    const q = $('#question').textContent
+    try{ await navigator.clipboard.writeText(q); 
+      const old = $('#btnCopy').textContent; $('#btnCopy').textContent='Copied!'; setTimeout(()=>$('#btnCopy').textContent=old,1200)
+    } catch(e){ alert('Copy failed. You can manually copy the text.') }
+  })
+
+  $('#btnShare').addEventListener('click',()=>{
+    const cats = active.size? Array.from(active).join(',') : ''
+    const u = new URL(location.href)
+    if(cats) u.searchParams.set('cats', cats); else u.searchParams.delete('cats')
+    const t = $('#tone').value
+    if(t && t!=='any') u.searchParams.set('tone', t); else u.searchParams.delete('tone')
+    const th = $('#theme').value.trim()
+    if(th) u.searchParams.set('theme', th); else u.searchParams.delete('theme')
+    navigator.clipboard.writeText(u.toString()).then(()=>{
+      const old = $('#btnShare').textContent; $('#btnShare').textContent='Link copied'; setTimeout(()=>$('#btnShare').textContent=old,1200)
+    })
+  })
+
+  // Preload from query params
+  const toneParam = params.get('tone'); if(toneParam) $('#tone').value = toneParam
+  const themeParam = params.get('theme'); if(themeParam) $('#theme').value = themeParam
+  if(params.get('autogen')==='1') $('#btnGen').click()
+
+  // Resize observer for better iframe fit (optional)
+  const ro = new ResizeObserver(()=>{ parent.postMessage({icebreaker_height: document.body.scrollHeight}, '*') })
+  ro.observe(document.body)
+  </script>
+</body>
+</html>
